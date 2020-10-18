@@ -215,254 +215,6 @@ def write_to_file(*argv, separatore=','):
             statistic_writer.write(str(word) + separatore)
     statistic_writer.close()
 
-#todo: to be deleted
-"""
-def labels_csv_write(*argv):
-     **label_csv_writer** \n
-     **Get arguments to print and print them to file\n
-     *** the idea is (bool:?make_new_file?, file_name,....stuff to print...)
-     **TODO: make the file name dependes 
-    writer = open('labelsMapping.csv', 'a')
-    for word in argv:
-        if '\n' in str(word):
-            writer.write(str(word))
-        else:
-            writer.write(str(word) + ",")
-    writer.close()
-    """
-#todo: deliting
-"""
-def make_labels_csv(lsd):  # lsd[file_name, file_size, labels]
-    :param lsd: [file_name, file_size, dict(labels)]
-    :return: csv with the labels data
-
-    labels_csv_write('Label', 'StartPoint', 'EndPoint', 'Size', 'log_2', '\n')
-    for d in lsd[2]:
-        labels_csv_write(d, lsd[2][d]['start'], lsd[2][d]['end'], lsd[2][d]['size'],
-                         math.ceil(math.log(lsd[2][d]['size'], 2)), '\n')  # lsd[2][d]['size'],
-    labels_csv_write('end', 'end', 'end', 'end', '\n\n')
-"""
-
-
-def print_label_file(list_of_data):
-    file_name = (list_of_data[0].split('.'))[0]
-    file_name += '_label.csv'
-    file_size = list_of_data[1]
-    num_of_commands = list_of_data[3]
-    # print label statistics file
-    blocks_counter = 0
-    blocks_sum = 0
-    blocks_max = 0
-    write_to_csv_file(file_name, 'name', 'start', 'end', 'size', 'log_2', 'start_row_counter', 'commands in block',
-                         '\n')
-    labels = list_of_data[2]['label']
-    for x in labels:
-        start = labels[x]['start']
-        end = labels[x]['end']
-        size = labels[x]['num_of_rows']
-        start_row_counter = labels[x]['start_row_counter']
-        commands_in_block = labels[x]['num_of_rows']
-        if size > 0:
-            write_to_csv_file(file_name, x, start, end, size, math.ceil(math.log(size, 2)), start_row_counter,
-                              commands_in_block, '\n')
-            blocks_sum += size
-            blocks_counter += 1
-            if size > blocks_max:
-                blocks_max = size
-
-    blocks_average = math.ceil(blocks_sum / blocks_counter)
-    log_file_size = math.ceil(math.log(file_size, 2))
-    log_avg_block = math.ceil(math.log(blocks_average, 2))
-    log_max_block = math.ceil(math.log(blocks_max, 2))
-    write_to_csv_file(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
-                      blocks_average, '\ncommands in file:', num_of_commands, '\n')
-    write_to_csv_file(file_name, 'log data:', '\n')
-    write_to_csv_file(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
-                      log_avg_block, '\n')
-
-
-def print_branch_file(list_of_data):
-    # printing branches statistics file
-    file_name = (list_of_data[0].split('.'))[0]
-    file_name += '_branch.csv'
-    file_size = list_of_data[1]
-    num_of_commands = list_of_data[3]
-    labels = list_of_data[2]['label']
-    blocks_counter = 0
-    blocks_sum = 0
-    blocks_max = 0
-    start = 0
-    write_to_csv_file(file_name, 'num', 'ended by', 'continue to', 'start', 'end', 'size', 'log_2',
-                         'start_row_counter', 'commands in block', '\n')
-    branch = list_of_data[2]['branch']
-    for x in branch:
-        end = branch[x]['start_row_counter']
-        size = end - start
-        blocks_sum += size
-        blocks_counter += 1
-        write_to_csv_file(file_name, blocks_counter, branch[x]['command'], branch[x]['l_target'],
-                          start, end, size, math.ceil(math.log(size, 2)), branch[x]['start_row_counter'], size, '\n')
-        start = end
-        if size > blocks_max:
-            blocks_max = size
-
-    blocks_average = math.ceil(blocks_sum / blocks_counter)
-    log_file_size = math.ceil(math.log(file_size, 2))
-    log_avg_block = math.ceil(math.log(blocks_average, 2))
-    log_max_block = math.ceil(math.log(blocks_max, 2))
-    write_to_csv_file(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
-                      blocks_average, '\n')
-    write_to_csv_file(file_name, 'log data:', '\n')
-    write_to_csv_file(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
-                      log_avg_block, '\n')
-
-
-def print_flow_file(list_of_data):
-    # print combined file
-    file_name = (list_of_data[0].split('.'))[0]
-    file_name += '_flow.csv'
-    branches = list_of_data[2]['branch']
-    labels = list_of_data[2]['label']
-    num_of_commands = list_of_data[3]
-    file_size = list_of_data[1]
-    blocks_counter = 0
-    blocks_sum = 0
-    blocks_max = 0
-    start = 0
-    # TODO: statistics csv, print Dugri file combining the label and branches save flow to object
-    l_key = list(labels.keys())
-    b_key = list(branches.keys())
-    combine_dict = {'start': {'start': 0}}
-    list_of_data[2]['flow'] = combine_dict
-    current_point = 1
-    counter = 0  # TODO: changed from 1 to 0 for making the file start at 1 and not 2
-    i = 0
-    j = 0
-    prev_block = 'start'
-    prev_start = 0
-    size_list = list()
-    while (i < len(l_key)) and (j < len(b_key)):
-        if labels[l_key[i]]['start'] < int(b_key[j]):
-            combine_dict[prev_block]['end'] = labels[l_key[i]]['start_row_counter']
-            combine_dict[prev_block]['end_location'] = labels[l_key[i]]['start']
-            combine_dict[prev_block]['endBy'] = l_key[i]
-            combine_dict[prev_block]['next'] = l_key[i]
-            combine_dict[prev_block]['next_location'] = labels[l_key[i]]['start']
-            combine_dict[prev_block]['size'] = labels[l_key[i]]['start_row_counter'] - prev_start
-            prev_start = labels[l_key[i]]['start_row_counter']
-            if not (combine_dict[prev_block]['size'] == 0):
-                counter += 1
-            combine_dict[l_key[i]] = {'num': counter, 'start': labels[l_key[i]]['start_row_counter'],
-                                      'start_location': labels[l_key[i]]['start']}
-            prev_block = l_key[i]
-            i += 1
-        else:
-            full_command = branches[b_key[j]]['command'] + '->' + branches[b_key[j]]['l_target']
-            combine_dict[prev_block]['end'] = branches[b_key[j]]['start_row_counter']
-            combine_dict[prev_block]['end_location'] = branches[b_key[j]]['after_command_location']
-            combine_dict[prev_block]['endBy'] = full_command
-            combine_dict[prev_block]['next'] = branches[b_key[j]]['l_target']
-            try:
-                combine_dict[prev_block]['next_location'] = labels[branches[b_key[j]]['l_target']]['start']
-            except:
-                combine_dict[prev_block]['next_location'] = 'end\error'
-            combine_dict[prev_block]['size'] = branches[b_key[j]]['start_row_counter'] - prev_start
-            prev_start = branches[b_key[j]]['start_row_counter']
-            if not (combine_dict[prev_block]['size'] == 0):
-                counter += 1
-            combine_dict[full_command] = {'num': counter, 'start': branches[b_key[j]]['start_row_counter'],
-                                          'start_location': branches[b_key[j]]['after_command_location']}
-            prev_block = full_command
-            j += 1
-
-    while i < len(l_key):
-        combine_dict[prev_block]['end'] = labels[l_key[i]]['start_row_counter']
-        combine_dict[prev_block]['end_location'] = labels[l_key[i]]['start']
-        combine_dict[prev_block]['endBy'] = l_key[i]
-        combine_dict[prev_block]['next'] = l_key[i]
-        combine_dict[prev_block]['next_location'] = labels[l_key[i]]['start']
-        combine_dict[prev_block]['size'] = labels[l_key[i]]['start_row_counter'] - prev_start
-        # adding section
-        if not (combine_dict[prev_block]['size'] == 0):
-            counter += 1
-        prev_start = labels[l_key[i]]['start_row_counter']
-        combine_dict[l_key[i]] = {'num': counter, 'start': prev_start, 'start_location': labels[l_key[i]]['start']}
-        prev_block = l_key[i]
-        i += 1
-
-    while j < len(b_key):
-        full_command = branches[b_key[j]]['command'] + '->' + branches[b_key[j]]['l_target']
-        combine_dict[prev_block]['end'] = branches[b_key[j]]['start_row_counter']
-        combine_dict[prev_block]['end_location'] = branches[b_key[j]]['after_command_location']
-        combine_dict[prev_block]['endBy'] = full_command
-        combine_dict[prev_block]['next'] = branches[b_key[j]]['l_target']
-        try:
-            combine_dict[prev_block]['next_location'] = labels[branches[b_key[j]]['l_target']]['start']
-        except:
-            combine_dict[prev_block]['next_location'] = 'end\error'
-        combine_dict[prev_block]['size'] = branches[b_key[j]]['start_row_counter'] - prev_start
-        # adding section
-        prev_start = branches[b_key[j]]['start_row_counter']
-        if not (combine_dict[prev_block]['size'] == 0):
-            counter += 1
-        combine_dict[full_command] = {'num': counter, 'start': branches[b_key[j]]['start_row_counter'],
-                                      'start_location': branches[b_key[j]]['after_command_location']}
-        prev_block = full_command
-        j += 1
-    combine_dict[prev_block]['end'] = num_of_commands
-    combine_dict[prev_block]['size'] = num_of_commands - prev_start
-
-    # cleaning the dic from size = 0
-    j = 0
-    del combine_dict['start']
-    keys = list(combine_dict.keys())
-    while j < len(keys):
-        if combine_dict[keys[j]]['size'] == 0:
-            del combine_dict[keys[j]]
-        j += 1
-
-    # clculating the avg size max size and logs
-    blocks_counter = 0
-    blocks_sum = 0
-    blocks_max = 0
-    write_to_csv_file(file_name, 'num,startBy,endBy,next,start,end,size,log_2', '\n')
-    for x in combine_dict:
-        combine_dict[x]['num_of_rows'] = combine_dict[x]['size']
-        size = combine_dict[x]['size'] * OPSIZE
-        if size <= 0:
-            size = size * (-1)
-            size += 1
-        combine_dict[x]['size'] = size
-        size_list.append(math.ceil(math.log(size, 2)))
-        blocks_sum += size
-        blocks_counter += 1
-        if size > blocks_max:
-            blocks_max = size
-        if not (x == 'start'):
-            try:
-                combine_dict[x]['next'] = combine_dict[combine_dict[x]['next']]['num']
-            except:
-                combine_dict[x]['next'] = 'end'
-            try:
-                combine_dict[x]['endBy'] = combine_dict[x]['endBy']
-            except:
-                combine_dict[x]['endBy'] = 'eof'
-            write_to_csv_file(file_name, combine_dict[x]['num'], x, combine_dict[x]['endBy'], combine_dict[x]['next']
-                              , combine_dict[x]['start'], combine_dict[x]['end'], size,
-                              math.ceil(math.log(size, 2)), '\n')
-    blocks_average = math.ceil(blocks_sum / blocks_counter)
-    size_of_commands = list_of_data[3] * OPSIZE
-    log_file_size = size_of_commands
-    log_avg_block = math.ceil(math.log(blocks_average, 2))
-    log_max_block = math.ceil(math.log(blocks_max, 2))
-    # todo: call for converting func
-    list_of_data[2]['bb_flow'] = convert_dict_to_classes(combine_dict,file_name.split('_')[0]+'.s')
-    list_of_data.append(math.ceil(math.log(size_of_commands, 2)))
-    list_of_data.append(log_max_block)
-    list_of_data.append(log_avg_block)
-    list_of_data.append(size_list)
-    return list_of_data
-
 
 def analytic_part(*argv):
     list_of_files = []
@@ -494,8 +246,7 @@ def analytic_part(*argv):
         print_bb_dict_for_matlab(list_of_data[2]['bb_flow'],flow_file)
         #todo: move this print to before spliting and instead of printing updating
 
-    write_to_csv_file('summery.csv', 'file_name', 'size in Kb', 'program size(Byte)', 'max_block_log',
-                         'avg_block_log')
+    write_to_csv_file('summery.csv', 'file_name', 'size in Kb', 'program size(Byte)', 'max_block_log','avg_block_log')
     for x in range(20):
         write_to_csv_file('summery.csv', '< size <= 2^' + str(x))
     write_to_csv_file('summery.csv', '\n')
@@ -712,7 +463,7 @@ def spliting_bb(asm_file_name, bb:Basic_block, mean_command_for_bb,skip:bool):
     bb.byteSize = bb.num_of_op_rows * OPSIZE
     return [counter1+counter2,bb,skip]
 
-# TODO: to be continue.. למצוא דרך לגשת לנתונים בסנכרון מלא
+
 def split_bb_to_min_size(CFG, list_of_data, flow_file, bb_max=BB_MAX_BYTE_SIZE):
     asm_file_name = flow_file.split('_')[0]+'_assembly.txt'#list_of_data[0]
     flow_data = covert_references(list_of_data[2]['bb_flow'],asm_file_name)
@@ -775,6 +526,26 @@ def is_a_branch(str: string):
         return False
 
 
+def num_of_long_commands(asm_name: string, start: int, end: int):
+    """
+    counting num_of_long_commands from start to end in asm_name:file
+    return: num_of_long_commands
+    """
+    ans = bool
+    current_reader_position = 0
+    long_commands_counter = 0
+    with open(asm_name) as asmFile:
+        asmFile.seek(start)  # posate the reader on start
+        asmReader = asmFile.readline()
+        current_reader_position = asmFile.tell()  # updating the current_reader_position
+        while current_reader_position <= end:
+            if '.w' in asmReader:
+                long_commands_counter += 1
+            asmReader = asmFile.readline()
+            current_reader_position = asmFile.tell()
+    return long_commands_counter
+
+
 def convert_dict_to_classes(dict, file_name):
     keys = dict.keys()
     bb_dict = {}
@@ -803,26 +574,6 @@ def convert_dict_to_classes(dict, file_name):
         prev_bb_end_row_op = bb_dict[key].end_row_op
     #print_bb_dict(bb_dict)
     return bb_dict
-
-
-def num_of_long_commands(asm_name: string, start: int, end: int):
-    """
-    counting num_of_long_commands from start to end in asm_name:file
-    return: num_of_long_commands
-    """
-    ans = bool
-    current_reader_position = 0
-    long_commands_counter = 0
-    with open(asm_name) as asmFile:
-        asmFile.seek(start)  # posate the reader on start
-        asmReader = asmFile.readline()
-        current_reader_position = asmFile.tell()  # updating the current_reader_position
-        while current_reader_position <= end:
-            if '.w' in asmReader:
-                long_commands_counter += 1
-            asmReader = asmFile.readline()
-            current_reader_position = asmFile.tell()
-    return long_commands_counter
 
 
 def covert_references(bb_dict: dict, assembly_file: string):
@@ -858,6 +609,224 @@ def covert_references(bb_dict: dict, assembly_file: string):
         if bb.next1 != 'end':
             bb.next1_location = jump_dict[bb.next1]
     return bb_dict
+
+
+def print_label_file(list_of_data):
+    file_name = (list_of_data[0].split('.'))[0]
+    file_name += '_label.csv'
+    file_size = list_of_data[1]
+    num_of_commands = list_of_data[3]
+    # print label statistics file
+    blocks_counter = 0
+    blocks_sum = 0
+    blocks_max = 0
+    write_to_csv_file(file_name, 'name', 'start', 'end', 'size', 'log_2', 'start_row_counter', 'commands in block',
+                         '\n')
+    labels = list_of_data[2]['label']
+    for x in labels:
+        start = labels[x]['start']
+        end = labels[x]['end']
+        size = labels[x]['num_of_rows']
+        start_row_counter = labels[x]['start_row_counter']
+        commands_in_block = labels[x]['num_of_rows']
+        if size > 0:
+            write_to_csv_file(file_name, x, start, end, size, math.ceil(math.log(size, 2)), start_row_counter,
+                              commands_in_block, '\n')
+            blocks_sum += size
+            blocks_counter += 1
+            if size > blocks_max:
+                blocks_max = size
+
+    blocks_average = math.ceil(blocks_sum / blocks_counter)
+    log_file_size = math.ceil(math.log(file_size, 2))
+    log_avg_block = math.ceil(math.log(blocks_average, 2))
+    log_max_block = math.ceil(math.log(blocks_max, 2))
+    write_to_csv_file(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
+                      blocks_average, '\ncommands in file:', num_of_commands, '\n')
+    write_to_csv_file(file_name, 'log data:', '\n')
+    write_to_csv_file(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
+                      log_avg_block, '\n')
+
+
+def print_branch_file(list_of_data):
+    # printing branches statistics file
+    file_name = (list_of_data[0].split('.'))[0]
+    file_name += '_branch.csv'
+    file_size = list_of_data[1]
+    num_of_commands = list_of_data[3]
+    labels = list_of_data[2]['label']
+    blocks_counter = 0
+    blocks_sum = 0
+    blocks_max = 0
+    start = 0
+    write_to_csv_file(file_name, 'num', 'ended by', 'continue to', 'start', 'end', 'size', 'log_2',
+                         'start_row_counter', 'commands in block', '\n')
+    branch = list_of_data[2]['branch']
+    for x in branch:
+        end = branch[x]['start_row_counter']
+        size = end - start
+        blocks_sum += size
+        blocks_counter += 1
+        write_to_csv_file(file_name, blocks_counter, branch[x]['command'], branch[x]['l_target'],
+                          start, end, size, math.ceil(math.log(size, 2)), branch[x]['start_row_counter'], size, '\n')
+        start = end
+        if size > blocks_max:
+            blocks_max = size
+
+    blocks_average = math.ceil(blocks_sum / blocks_counter)
+    log_file_size = math.ceil(math.log(file_size, 2))
+    log_avg_block = math.ceil(math.log(blocks_average, 2))
+    log_max_block = math.ceil(math.log(blocks_max, 2))
+    write_to_csv_file(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
+                      blocks_average, '\n')
+    write_to_csv_file(file_name, 'log data:', '\n')
+    write_to_csv_file(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
+                      log_avg_block, '\n')
+
+
+def print_flow_file(list_of_data):
+    # print combined file
+    file_name = (list_of_data[0].split('.'))[0]
+    file_name += '_flow.csv'
+    branches = list_of_data[2]['branch']
+    labels = list_of_data[2]['label']
+    num_of_commands = list_of_data[3]
+    file_size = list_of_data[1]
+    blocks_counter = 0
+    blocks_sum = 0
+    blocks_max = 0
+    start = 0
+    l_key = list(labels.keys())
+    b_key = list(branches.keys())
+    combine_dict = {'start': {'start': 0}}
+    list_of_data[2]['flow'] = combine_dict
+    current_point = 1
+    counter = 0
+    i = 0
+    j = 0
+    prev_block = 'start'
+    prev_start = 0
+    size_list = list()
+    while (i < len(l_key)) and (j < len(b_key)):
+        if labels[l_key[i]]['start'] < int(b_key[j]):
+            combine_dict[prev_block]['end'] = labels[l_key[i]]['start_row_counter']
+            combine_dict[prev_block]['end_location'] = labels[l_key[i]]['start']
+            combine_dict[prev_block]['endBy'] = l_key[i]
+            combine_dict[prev_block]['next'] = l_key[i]
+            combine_dict[prev_block]['next_location'] = labels[l_key[i]]['start']
+            combine_dict[prev_block]['size'] = labels[l_key[i]]['start_row_counter'] - prev_start
+            prev_start = labels[l_key[i]]['start_row_counter']
+            if not (combine_dict[prev_block]['size'] == 0):
+                counter += 1
+            combine_dict[l_key[i]] = {'num': counter, 'start': labels[l_key[i]]['start_row_counter'],
+                                      'start_location': labels[l_key[i]]['start']}
+            prev_block = l_key[i]
+            i += 1
+        else:
+            full_command = branches[b_key[j]]['command'] + '->' + branches[b_key[j]]['l_target']
+            combine_dict[prev_block]['end'] = branches[b_key[j]]['start_row_counter']
+            combine_dict[prev_block]['end_location'] = branches[b_key[j]]['after_command_location']
+            combine_dict[prev_block]['endBy'] = full_command
+            combine_dict[prev_block]['next'] = branches[b_key[j]]['l_target']
+            try:
+                combine_dict[prev_block]['next_location'] = labels[branches[b_key[j]]['l_target']]['start']
+            except:
+                combine_dict[prev_block]['next_location'] = 'end\error'
+            combine_dict[prev_block]['size'] = branches[b_key[j]]['start_row_counter'] - prev_start
+            prev_start = branches[b_key[j]]['start_row_counter']
+            if not (combine_dict[prev_block]['size'] == 0):
+                counter += 1
+            combine_dict[full_command] = {'num': counter, 'start': branches[b_key[j]]['start_row_counter'],
+                                          'start_location': branches[b_key[j]]['after_command_location']}
+            prev_block = full_command
+            j += 1
+
+    while i < len(l_key):
+        combine_dict[prev_block]['end'] = labels[l_key[i]]['start_row_counter']
+        combine_dict[prev_block]['end_location'] = labels[l_key[i]]['start']
+        combine_dict[prev_block]['endBy'] = l_key[i]
+        combine_dict[prev_block]['next'] = l_key[i]
+        combine_dict[prev_block]['next_location'] = labels[l_key[i]]['start']
+        combine_dict[prev_block]['size'] = labels[l_key[i]]['start_row_counter'] - prev_start
+        # adding section
+        if not (combine_dict[prev_block]['size'] == 0):
+            counter += 1
+        prev_start = labels[l_key[i]]['start_row_counter']
+        combine_dict[l_key[i]] = {'num': counter, 'start': prev_start, 'start_location': labels[l_key[i]]['start']}
+        prev_block = l_key[i]
+        i += 1
+
+    while j < len(b_key):
+        full_command = branches[b_key[j]]['command'] + '->' + branches[b_key[j]]['l_target']
+        combine_dict[prev_block]['end'] = branches[b_key[j]]['start_row_counter']
+        combine_dict[prev_block]['end_location'] = branches[b_key[j]]['after_command_location']
+        combine_dict[prev_block]['endBy'] = full_command
+        combine_dict[prev_block]['next'] = branches[b_key[j]]['l_target']
+        try:
+            combine_dict[prev_block]['next_location'] = labels[branches[b_key[j]]['l_target']]['start']
+        except:
+            combine_dict[prev_block]['next_location'] = 'end\error'
+        combine_dict[prev_block]['size'] = branches[b_key[j]]['start_row_counter'] - prev_start
+        # adding section
+        prev_start = branches[b_key[j]]['start_row_counter']
+        if not (combine_dict[prev_block]['size'] == 0):
+            counter += 1
+        combine_dict[full_command] = {'num': counter, 'start': branches[b_key[j]]['start_row_counter'],
+                                      'start_location': branches[b_key[j]]['after_command_location']}
+        prev_block = full_command
+        j += 1
+    combine_dict[prev_block]['end'] = num_of_commands
+    combine_dict[prev_block]['size'] = num_of_commands - prev_start
+
+    # cleaning the dic from size = 0
+    j = 0
+    del combine_dict['start']
+    keys = list(combine_dict.keys())
+    while j < len(keys):
+        if combine_dict[keys[j]]['size'] == 0:
+            del combine_dict[keys[j]]
+        j += 1
+
+    # clculating the avg size max size and logs
+    blocks_counter = 0
+    blocks_sum = 0
+    blocks_max = 0
+    write_to_csv_file(file_name, 'num,startBy,endBy,next,start,end,size,log_2', '\n')
+    for x in combine_dict:
+        combine_dict[x]['num_of_rows'] = combine_dict[x]['size']
+        size = combine_dict[x]['size'] * OPSIZE
+        if size <= 0:
+            size = size * (-1)
+            size += 1
+        combine_dict[x]['size'] = size
+        size_list.append(math.ceil(math.log(size, 2)))
+        blocks_sum += size
+        blocks_counter += 1
+        if size > blocks_max:
+            blocks_max = size
+        if not (x == 'start'):
+            try:
+                combine_dict[x]['next'] = combine_dict[combine_dict[x]['next']]['num']
+            except:
+                combine_dict[x]['next'] = 'end'
+            try:
+                combine_dict[x]['endBy'] = combine_dict[x]['endBy']
+            except:
+                combine_dict[x]['endBy'] = 'eof'
+            write_to_csv_file(file_name, combine_dict[x]['num'], x, combine_dict[x]['endBy'], combine_dict[x]['next']
+                              , combine_dict[x]['start'], combine_dict[x]['end'], size,
+                              math.ceil(math.log(size, 2)), '\n')
+    blocks_average = math.ceil(blocks_sum / blocks_counter)
+    size_of_commands = list_of_data[3] * OPSIZE
+    log_file_size = size_of_commands
+    log_avg_block = math.ceil(math.log(blocks_average, 2))
+    log_max_block = math.ceil(math.log(blocks_max, 2))
+    list_of_data[2]['bb_flow'] = convert_dict_to_classes(combine_dict,file_name.split('_')[0]+'.s')
+    list_of_data.append(math.ceil(math.log(size_of_commands, 2)))
+    list_of_data.append(log_max_block)
+    list_of_data.append(log_avg_block)
+    list_of_data.append(size_list)
+    return list_of_data
 
 
 def print_dict(dict):
@@ -897,9 +866,6 @@ def main(*argv):  # *argv
 
     making_binary_and_assembly_files(*argv)
     analytic_part(*argv)
-    # split_bb_to_min_size()
-    #write_to_file('sha_binary.txt','title,,\n')
-    #write_to_file('sha_binary.csv','end,,\n')
     print('\n****\nSuccefully ended:\t DONT WORRY BE HAPPY :-)\n*****')
 
 #                   """******** Succesfully ended:	DONT WORRY BE HAPPY :-)********"""
