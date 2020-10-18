@@ -11,7 +11,7 @@ import matlab
 OPSIZE = 16
 BB_MAX_BYTE_SIZE = pow(2, 8)
 BB_MAX_COMMAND_COUNTER = BB_MAX_BYTE_SIZE/16
-
+CON_BRANCHES_LIST = ['ble', 'beq','bne','bpl','bmi','bcc','bcs','bgt','bge','blt','bhi','bls']
 
 @dataclass
 class Basic_block:
@@ -182,7 +182,7 @@ def collect_jump_data(lsd):  # lsd[file_name, file_size, labels]
     return [file_name, file_size, info, all_commands_counter]
 
 
-def statistics_csv_write(*argv):
+def write_to_csv_file(*argv):
     """   **Statistics_csv_writer**\n
     *** Func get arguments for printing to the statistics csv file\n
     :param argv: [file_name, stuff to print...]
@@ -243,6 +243,7 @@ def make_labels_csv(lsd):  # lsd[file_name, file_size, labels]
     labels_csv_write('end', 'end', 'end', 'end', '\n\n')
 """
 
+
 def print_label_file(list_of_data):
     file_name = (list_of_data[0].split('.'))[0]
     file_name += '_label.csv'
@@ -252,7 +253,7 @@ def print_label_file(list_of_data):
     blocks_counter = 0
     blocks_sum = 0
     blocks_max = 0
-    statistics_csv_write(file_name, 'name', 'start', 'end', 'size', 'log_2', 'start_row_counter', 'commands in block',
+    write_to_csv_file(file_name, 'name', 'start', 'end', 'size', 'log_2', 'start_row_counter', 'commands in block',
                          '\n')
     labels = list_of_data[2]['label']
     for x in labels:
@@ -262,8 +263,8 @@ def print_label_file(list_of_data):
         start_row_counter = labels[x]['start_row_counter']
         commands_in_block = labels[x]['num_of_rows']
         if size > 0:
-            statistics_csv_write(file_name, x, start, end, size, math.ceil(math.log(size, 2)), start_row_counter,
-                                 commands_in_block, '\n')
+            write_to_csv_file(file_name, x, start, end, size, math.ceil(math.log(size, 2)), start_row_counter,
+                              commands_in_block, '\n')
             blocks_sum += size
             blocks_counter += 1
             if size > blocks_max:
@@ -273,11 +274,11 @@ def print_label_file(list_of_data):
     log_file_size = math.ceil(math.log(file_size, 2))
     log_avg_block = math.ceil(math.log(blocks_average, 2))
     log_max_block = math.ceil(math.log(blocks_max, 2))
-    statistics_csv_write(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
-                         blocks_average, '\ncommands in file:', num_of_commands, '\n')
-    statistics_csv_write(file_name, 'log data:', '\n')
-    statistics_csv_write(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
-                         log_avg_block, '\n')
+    write_to_csv_file(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
+                      blocks_average, '\ncommands in file:', num_of_commands, '\n')
+    write_to_csv_file(file_name, 'log data:', '\n')
+    write_to_csv_file(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
+                      log_avg_block, '\n')
 
 
 def print_branch_file(list_of_data):
@@ -291,7 +292,7 @@ def print_branch_file(list_of_data):
     blocks_sum = 0
     blocks_max = 0
     start = 0
-    statistics_csv_write(file_name, 'num', 'ended by', 'continue to', 'start', 'end', 'size', 'log_2',
+    write_to_csv_file(file_name, 'num', 'ended by', 'continue to', 'start', 'end', 'size', 'log_2',
                          'start_row_counter', 'commands in block', '\n')
     branch = list_of_data[2]['branch']
     for x in branch:
@@ -299,8 +300,8 @@ def print_branch_file(list_of_data):
         size = end - start
         blocks_sum += size
         blocks_counter += 1
-        statistics_csv_write(file_name, blocks_counter, branch[x]['command'], branch[x]['l_target'],
-                             start, end, size, math.ceil(math.log(size, 2)), branch[x]['start_row_counter'], size, '\n')
+        write_to_csv_file(file_name, blocks_counter, branch[x]['command'], branch[x]['l_target'],
+                          start, end, size, math.ceil(math.log(size, 2)), branch[x]['start_row_counter'], size, '\n')
         start = end
         if size > blocks_max:
             blocks_max = size
@@ -309,11 +310,11 @@ def print_branch_file(list_of_data):
     log_file_size = math.ceil(math.log(file_size, 2))
     log_avg_block = math.ceil(math.log(blocks_average, 2))
     log_max_block = math.ceil(math.log(blocks_max, 2))
-    statistics_csv_write(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
-                         blocks_average, '\n')
-    statistics_csv_write(file_name, 'log data:', '\n')
-    statistics_csv_write(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
-                         log_avg_block, '\n')
+    write_to_csv_file(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
+                      blocks_average, '\n')
+    write_to_csv_file(file_name, 'log data:', '\n')
+    write_to_csv_file(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
+                      log_avg_block, '\n')
 
 
 def print_flow_file(list_of_data):
@@ -424,7 +425,7 @@ def print_flow_file(list_of_data):
     blocks_counter = 0
     blocks_sum = 0
     blocks_max = 0
-    statistics_csv_write(file_name, 'num,startBy,endBy,next,start,end,size,log_2', '\n')
+    write_to_csv_file(file_name, 'num,startBy,endBy,next,start,end,size,log_2', '\n')
     for x in combine_dict:
         combine_dict[x]['num_of_rows'] = combine_dict[x]['size']
         size = combine_dict[x]['size'] * OPSIZE
@@ -446,9 +447,9 @@ def print_flow_file(list_of_data):
                 combine_dict[x]['endBy'] = combine_dict[x]['endBy']
             except:
                 combine_dict[x]['endBy'] = 'eof'
-            statistics_csv_write(file_name, combine_dict[x]['num'], x, combine_dict[x]['endBy'], combine_dict[x]['next']
-                                 , combine_dict[x]['start'], combine_dict[x]['end'], size,
-                                 math.ceil(math.log(size, 2)), '\n')
+            write_to_csv_file(file_name, combine_dict[x]['num'], x, combine_dict[x]['endBy'], combine_dict[x]['next']
+                              , combine_dict[x]['start'], combine_dict[x]['end'], size,
+                              math.ceil(math.log(size, 2)), '\n')
     blocks_average = math.ceil(blocks_sum / blocks_counter)
     size_of_commands = list_of_data[3] * OPSIZE
     log_file_size = size_of_commands
@@ -463,7 +464,7 @@ def print_flow_file(list_of_data):
     return list_of_data
 
 
-def first_analtic_part(*argv):
+def analytic_part(*argv):
     list_of_files = []
     for file_name in argv[0]:  # for each argument do...
         list_of_data = collect_labels_data(file_name)
@@ -493,11 +494,11 @@ def first_analtic_part(*argv):
         print_bb_dict_for_matlab(list_of_data[2]['bb_flow'],flow_file)
         #todo: move this print to before spliting and instead of printing updating
 
-    statistics_csv_write('summery.csv', 'file_name', 'size in Kb', 'program size(Byte)', 'max_block_log',
+    write_to_csv_file('summery.csv', 'file_name', 'size in Kb', 'program size(Byte)', 'max_block_log',
                          'avg_block_log')
     for x in range(20):
-        statistics_csv_write('summery.csv', '< size <= 2^' + str(x))
-    statistics_csv_write('summery.csv', '\n')
+        write_to_csv_file('summery.csv', '< size <= 2^' + str(x))
+    write_to_csv_file('summery.csv', '\n')
     for l1 in list_of_files:
         size_list = l1[7]
         size_dict = {}
@@ -506,14 +507,14 @@ def first_analtic_part(*argv):
                 size_dict[str(x)] += 1
             except:
                 size_dict[str(x)] = 1
-        statistics_csv_write('summery.csv', l1[0], l1[1], OPSIZE * l1[3], l1[5], l1[6])
+        write_to_csv_file('summery.csv', l1[0], l1[1], OPSIZE * l1[3], l1[5], l1[6])
         #print('******** max ', max(size_dict.keys()))
         for x in range(20):
             try:
-                statistics_csv_write('summery.csv', size_dict[str(x)])
+                write_to_csv_file('summery.csv', size_dict[str(x)])
             except:
-                statistics_csv_write('summery.csv', 0)
-        statistics_csv_write('summery.csv', '\n')
+                write_to_csv_file('summery.csv', 0)
+        write_to_csv_file('summery.csv', '\n')
         l1.append(size_dict)
         #print(str(l1[7]))
         # size_dict = sorted(size_dict)
@@ -759,10 +760,9 @@ def split_bb_to_min_size(CFG, list_of_data, flow_file, bb_max=BB_MAX_BYTE_SIZE):
     return flow_data
 
 
-
 def is_a_con_branch(str):
-    con_brances_arr = ['ble', 'beq','bne','bpl','bmi','bcc','bcs','bgt','bge','blt','bhi','bls']
-    for b in con_brances_arr:
+    #con_brances_arr = ['ble', 'beq','bne','bpl','bmi','bcc','bcs','bgt','bge','blt','bhi','bls']
+    for b in CON_BRANCHES_LIST:
         if b in str:  # explisit branches
             return True
     return False
@@ -773,15 +773,6 @@ def is_a_branch(str: string):
         return True
     else:
         return False
-
-
-
-def print_dict(dict):
-    print(
-        'dict[x].num,\t, dict[x].start, \t, dict[x].start_row_counter, \t, dict[x].end, \t, dict[x].end_by,\t, dict[x].next1')
-    for x in dict:
-        print(dict[x].num, '\t', dict[x].start, '\t', dict[x].start_row_counter, '\t', dict[x].end, '\t',
-              dict[x].end_by, '\t', dict[x].next1)
 
 
 def convert_dict_to_classes(dict, file_name):
@@ -812,19 +803,6 @@ def convert_dict_to_classes(dict, file_name):
         prev_bb_end_row_op = bb_dict[key].end_row_op
     #print_bb_dict(bb_dict)
     return bb_dict
-
-
-def print_bb_dict(dict:{'':Basic_block}, file_name):
-    file_name = file_name.split('.')[0].split('_')[0] + '_bb_flow.csv'
-    statistics_csv_write(file_name, 'num,startBy,start_row,strart_row_op,start_location,endBy,end_row,end_row_op,end_location,'
-                                            'have_con_branch?,next1,next1_location,num_of_asm_rows,long,rows_to_mul,size,enrances\n')
-    keys = dict.keys()
-    for x in keys:
-        y = dict[x]
-        y: Basic_block
-        statistics_csv_write(file_name, y.num, y.startBy, y.start_row_counter,y.start_row_op, y.start_location, y.endBy,
-               y.end_row_counter, y.end_row_op, y.end_location, y.is_it_con_branch, y.next1,
-              y.next1_location, y.num_of_asm_rows, y.num_of_long_commands, y.num_of_op_rows,y.byteSize,y.entrances,'\n')
 
 
 def num_of_long_commands(asm_name: string, start: int, end: int):
@@ -882,22 +860,43 @@ def covert_references(bb_dict: dict, assembly_file: string):
     return bb_dict
 
 
+def print_dict(dict):
+    print(
+        'dict[x].num,\t, dict[x].start, \t, dict[x].start_row_counter, \t, dict[x].end, \t, dict[x].end_by,\t, dict[x].next1')
+    for x in dict:
+        print(dict[x].num, '\t', dict[x].start, '\t', dict[x].start_row_counter, '\t', dict[x].end, '\t',
+              dict[x].end_by, '\t', dict[x].next1)
+
+
+def print_bb_dict(dict:{'':Basic_block}, file_name):
+    file_name = file_name.split('.')[0].split('_')[0] + '_bb_flow.csv'
+    write_to_csv_file(file_name, 'num,startBy,start_row,strart_row_op,start_location,endBy,end_row,end_row_op,end_location,'
+                                            'have_con_branch?,next1,next1_location,num_of_asm_rows,long,rows_to_mul,size,enrances\n')
+    keys = dict.keys()
+    for x in keys:
+        y = dict[x]
+        y: Basic_block
+        write_to_csv_file(file_name, y.num, y.startBy, y.start_row_counter, y.start_row_op, y.start_location, y.endBy,
+                          y.end_row_counter, y.end_row_op, y.end_location, y.is_it_con_branch, y.next1,
+                          y.next1_location, y.num_of_asm_rows, y.num_of_long_commands, y.num_of_op_rows, y.byteSize, y.entrances,'\n')
+
+
 def print_bb_dict_for_matlab(dict:{'':Basic_block}, file_name:string):
     file_name = file_name.split('.')[0].split('_')[0] + '_bb_flow_for_matlab.csv'
-    statistics_csv_write(file_name, 'num,startBy,endBy,next,start,end,size,entrances\n')
+    write_to_csv_file(file_name, 'num,startBy,endBy,next,start,end,size,entrances\n')
 
     keys = dict.keys()
     for x in keys:
         y = dict[x]
         y: Basic_block
-        statistics_csv_write('sha_bb_flow_for_matlab.csv', y.num_for_matlab, y.startBy,y.endBy,y.next_for_matlab,
-                             y.start_row_op,y.end_row_op,y.byteSize,y.entrances,'\n')
+        write_to_csv_file('sha_bb_flow_for_matlab.csv', y.num_for_matlab, y.startBy, y.endBy, y.next_for_matlab,
+                          y.start_row_op, y.end_row_op, y.byteSize, y.entrances,'\n')
 
 
 def main(*argv):  # *argv
 
     making_binary_and_assembly_files(*argv)
-    first_analtic_part(*argv)
+    analytic_part(*argv)
     # split_bb_to_min_size()
     #write_to_file('sha_binary.txt','title,,\n')
     #write_to_file('sha_binary.csv','end,,\n')
