@@ -5,19 +5,12 @@ from pathlib import Path
 import math
 import networkx as nx
 import matplotlib.pyplot as plt
-# asemly = open('C:\\Users\\DELL\OneDrive\\avichaiAndBarak\\HarryPoter2.pdf', 'rb')
-# Creating a pdf reader object
-# pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
-# Getting number of pages in pdf file
-# pages = pdfReader.numPages
 import string
 import matlab
-"""for prog_location in sys.arg[1:]: """
 
 OPSIZE = 16
 BB_MAX_BYTE_SIZE = pow(2, 8)
 BB_MAX_COMMAND_COUNTER = BB_MAX_BYTE_SIZE/16
-CON = ('ble' or 'beq')
 
 
 @dataclass
@@ -82,19 +75,14 @@ class Program:
 
 # track from label to label
 def collect_labels_data(filename):
-    # (filename, file_address)
-    """ this func make a dict consisted from the labels data,\n
-    **** return [file_name, file_size, {'label': {'start':,'end':,'size':,'start_row_counter':,'num_of_rows':}},
-    all_commands_counter]\n
-    -TODO: try to initialize the dict without 'empty'"""
+    """ This func make a dict consisted from the labels data,\n
+    return: [file_name, file_size, {'label': {'start':,'end':,'size':,'start_row_counter':,'num_of_rows':}},
+    all_commands_counter]\n"""
     p = Program
     p.file_name = filename
     p.file_size = 0
     file_name = filename
     file_size = 0
-    # basic = Path(r+file_name)
-    # basic = 'C:\Users\DELL\OneDrive - Bar-Ilan University\הרצאות וחומרי קורסים\Final Project\'
-    # file_address = basic + file_name
     print(file_name)
     labels = {'empty': {'start': 1, 'start_row_counter': 1}}
     row_counter = 1
@@ -118,12 +106,6 @@ def collect_labels_data(filename):
                     (labels[temp_prev_label])['num_of_rows'] = row_counter - (labels[temp_prev_label])[
                         'start_row_counter']
                     all_commands_counter = row_counter
-                    # statistics_csv_write(file_name, file_size)
-
-                    "The File Size is:"
-                    # print("****************8*********\nFile size is\t:", file_size, all_commands_counter)
-                    # print('the first label is:\t', list(labels)[1])
-                    # (labels[tempList[0]])['end'] = asmFile.tell()
                     asmFile.seek(labels[list(labels)[1]]['start'])  # moving the reader to the start of the file
                     flag = False  # for ending the search for labels
                 else:
@@ -136,10 +118,8 @@ def collect_labels_data(filename):
                         'start_row_counter']
                     (labels[temp_prev_label])['size'] = label_location - (labels[temp_prev_label])['start']
                     temp_prev_label = tempList[0]
-                    # print(labels[tempList[0]])
             elif '@' in asmReader or asmReader.startswith('\t.'):
                 row_counter -= 1
-        # print(labels)
 
     return list([file_name, file_size, labels, all_commands_counter])
 
@@ -148,7 +128,7 @@ def collect_labels_data(filename):
 # assuming al branches start with b
 def collect_jump_data(lsd):  # lsd[file_name, file_size, labels]
     """
-    this function find all the branches command if file_name
+    this function find all the branches command if file_name \n
     :param lsd: [file_name, file_size, dict(labels), all_commands_counter]
     :return: [file_name, file_size, {'labels': dict(label),\n
               'branch':{b_ad:{command:,l_target:,command_in_label:,ad_target,'start_row_counter':,'num_of_rows': ]
@@ -162,7 +142,6 @@ def collect_jump_data(lsd):  # lsd[file_name, file_size, labels]
     info = {'label': lsd[2]}
     jump_dict = {}
     row_counter = 1
-    labels_csv_write('\n', 'LineNum,inLabel,command,JumpToLabel,jumpToAd,start_row_counter', '\n')  # Head Title
     with open(file_name) as asmFile:
         asmReader = asmFile.readline()  # reading new line
         asmFile.seek(labels[list(labels)[1]]['start'])
@@ -180,19 +159,15 @@ def collect_jump_data(lsd):  # lsd[file_name, file_size, labels]
                     not (asmReader.startswith('.'))) and ('__stack_chk_fail' not in asmReader) and (
                     ':' not in asmReader):  # if true this is a branch command
                 st = asmReader.replace('\n', '')
-                # print(asmReader)
-                # print(before_command_location)
                 st = st.split('\t')
-                # print(st)
                 jump_dict[str_bcl] = {'command': st[1], 'l_target': st[2], 'start_row_counter': row_counter,
                                       'before_command_location': before_command_location,
                                       'after_command_location': after_command_location, 'full_command': st}
                 print(jump_dict[str_bcl]['full_command'])
-                flag = False  ##*****************************************************************************
+                flag = False
                 for x in labels:
-                    # print('x', x, 'st[2]', st[2])
                     if x != 'empty':
-                        # find in which label the brach placed
+                        # find in which label the braches placed in
                         if (labels[x]['start'] < before_command_location) and \
                                 (labels[x]['end'] > before_command_location):
                             jump_dict[str_bcl]['command_in_label'] = x
@@ -203,8 +178,6 @@ def collect_jump_data(lsd):  # lsd[file_name, file_size, labels]
                         elif not flag:  # if label doesent exist
                             jump_dict[str_bcl]['ad_target'] = st[2]
                             flag = True
-            # labels_csv_write(before_command_location, jump_dict[str_bcl]['command_in_label'],
-            #  st[1], st[2], (jump_dict[str_bcl]['ad_target'] or st[2]), row_counter, '\n')
             elif '@' in asmReader or ':' in asmReader or asmReader.startswith('\t.'):
                 row_counter -= 1
     info['branch'] = jump_dict
@@ -214,14 +187,9 @@ def collect_jump_data(lsd):  # lsd[file_name, file_size, labels]
 def statistics_csv_write(*argv):
     """   **Statistics_csv_writer**\n
     *** Func get arguments for printing to the statistics csv file\n
-    *** the format is to be decided,\n
-    *** the idea is (bool:?make_new_file?, file_name,....stuff to print...)\n
-    ***TODO: make the file name dependes
-
     :param argv: [file_name, stuff to print...]
     :return: csv file
     """
-
     statistic_writer = open(argv[0], 'a')
     for word in argv[1:]:
         if '\n' in str(word):
@@ -236,8 +204,6 @@ def write_to_file(*argv, separatore=','):
     *** Func get arguments for printing to the statistics csv file\n
     *** the format is to be decided,\n
     *** the idea is (bool:?make_new_file?, file_name,....stuff to print...)\n
-    ***TODO: make the file name dependes
-
     :param separatore: separatore
     :param argv: [file_name, stuff to print...]
     :return: txt file
@@ -251,12 +217,13 @@ def write_to_file(*argv, separatore=','):
             statistic_writer.write(str(word) + separatore)
     statistic_writer.close()
 
-
+#todo: to be deleted
+"""
 def labels_csv_write(*argv):
-    """ **label_csv_writer** \n
+     **label_csv_writer** \n
      **Get arguments to print and print them to file\n
      *** the idea is (bool:?make_new_file?, file_name,....stuff to print...)
-     **TODO: make the file name dependes """
+     **TODO: make the file name dependes 
     writer = open('labelsMapping.csv', 'a')
     for word in argv:
         if '\n' in str(word):
@@ -264,20 +231,19 @@ def labels_csv_write(*argv):
         else:
             writer.write(str(word) + ",")
     writer.close()
-
-
-def make_labels_csv(lsd):  # lsd[file_name, file_size, labels]
     """
+#todo: deliting
+"""
+def make_labels_csv(lsd):  # lsd[file_name, file_size, labels]
     :param lsd: [file_name, file_size, dict(labels)]
     :return: csv with the labels data
-    """
+
     labels_csv_write('Label', 'StartPoint', 'EndPoint', 'Size', 'log_2', '\n')
     for d in lsd[2]:
         labels_csv_write(d, lsd[2][d]['start'], lsd[2][d]['end'], lsd[2][d]['size'],
                          math.ceil(math.log(lsd[2][d]['size'], 2)), '\n')  # lsd[2][d]['size'],
     labels_csv_write('end', 'end', 'end', 'end', '\n\n')
-    # TODO: done
-
+"""
 
 def print_label_file(list_of_data):
     file_name = (list_of_data[0].split('.'))[0]
@@ -358,9 +324,6 @@ def print_flow_file(list_of_data):
     file_name += '_flow.csv'
     branches = list_of_data[2]['branch']
     labels = list_of_data[2]['label']
-    #print('######$$$$$#$##$#$ PRINT_FLOW_FILE_FUNC: ##$$$$$$$$$$$$$$$$$')
-    # print(branches, '\n')
-    # print(labels, '\n')
     num_of_commands = list_of_data[3]
     file_size = list_of_data[1]
     blocks_counter = 0
@@ -379,8 +342,6 @@ def print_flow_file(list_of_data):
     prev_block = 'start'
     prev_start = 0
     size_list = list()
-    # print(l_key[0])
-    # print(b_key)
     while (i < len(l_key)) and (j < len(b_key)):
         if labels[l_key[i]]['start'] < int(b_key[j]):
             combine_dict[prev_block]['end'] = labels[l_key[i]]['start_row_counter']
@@ -456,7 +417,6 @@ def print_flow_file(list_of_data):
     j = 0
     del combine_dict['start']
     keys = list(combine_dict.keys())
-    # print(keys)
     while j < len(keys):
         if combine_dict[keys[j]]['size'] == 0:
             del combine_dict[keys[j]]
@@ -466,7 +426,6 @@ def print_flow_file(list_of_data):
     blocks_counter = 0
     blocks_sum = 0
     blocks_max = 0
-
     statistics_csv_write(file_name, 'num,startBy,endBy,next,start,end,size,log_2', '\n')
     for x in combine_dict:
         combine_dict[x]['num_of_rows'] = combine_dict[x]['size']
@@ -501,12 +460,6 @@ def print_flow_file(list_of_data):
     log_max_block = math.ceil(math.log(blocks_max, 2))
     # todo: call for converting func
     list_of_data[2]['bb_flow'] = convert_dict_to_classes(combine_dict,file_name.split('_')[0]+'.s')
-    # print('*************************************************\n\n',combine_dict.keys(),'\n\n')
-    # statistics_csv_write(file_name, 'file size:', file_size, '\nMax size:,', blocks_max, '\nAverage size:,',
-    # blocks_average, '\nnum of commands *OPSIZE :,', size_of_commands, '\n')
-    # statistics_csv_write(file_name, 'log data:', '\n')
-    # statistics_csv_write(file_name, 'file size:', log_file_size, '\nMax size:,', log_max_block, '\nAverage size:,',
-    # log_avg_block, '\nnum of commands * OPSIZE:,', math.ceil(math.log(size_of_commands, 2)), '\n')
     list_of_data.append(math.ceil(math.log(size_of_commands, 2)))
     list_of_data.append(log_max_block)
     list_of_data.append(log_avg_block)
@@ -515,12 +468,10 @@ def print_flow_file(list_of_data):
 
 
 def first_analtic_part(*argv):
-    # print(argv)
     list_of_files = []
     for file_name in argv[0]:  # for each argument do...
         list_of_data = collect_labels_data(file_name)
         # [file_name, file_size, {'label': {'start':,'end':,'size':,'start_row_counter':,'num_of_rows':}}]
-        #make_labels_csv(list_of_data)
         list_of_data = collect_jump_data(list_of_data)
         """
         list of data is:
@@ -531,11 +482,8 @@ def first_analtic_part(*argv):
             '' represent fixed names
             "" changes from variable to variable
         """
-        # print_label_file(list_of_data)  # print label statistics file
-        # print_branch_file(list_of_data)  # printing branches statistics file
         list_of_data = print_flow_file(list_of_data)  # print flow file
         list_of_files.append(list_of_data)
-        #print('@@@@@@@@@@@@@@@@@@@@@@@@\nsizeList:\n', list_of_data)
 
         # control flow graph - CFG
         G_directed = make_CFG(list_of_data)  # making the CFG
@@ -617,8 +565,8 @@ def making_binary_and_assembly_files(*argv):
         source_name = file_name.split('.')[0]+'_opcode.txt'
         with open(source_name) as asmFile:
             count_to_break = 0
-            binary_file = source_name.split('_')[0]+'binary.txt'
-            assembly_file = source_name.split('_')[0]+'assembly.txt'
+            binary_file = source_name.split('_')[0]+'_binary.txt'
+            assembly_file = source_name.split('_')[0]+'_assembly.txt'
             write_to_file(binary_file, 'title \n')
             write_to_file(assembly_file, ' asm,operator1,operator2\n')
 
